@@ -17,9 +17,13 @@ global.logger = winston.createLogger({
   level: 'silly',
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'my-bank-api.log' }),
+    new winston.transports.File({ filename: 'grades-control-api.log' }),
   ],
-  format: combine(label({ label: 'my-label-api' }), timestamp(), myFormat),
+  format: combine(
+    label({ label: 'grades-control-api' }),
+    timestamp(),
+    myFormat
+  ),
 });
 
 const app = express();
@@ -37,6 +41,7 @@ app.listen(3000, async () => {
       grades: [],
     };
 
+    global.logger.debug(`Couln't find the file ${global.fileName} ...`);
     await writeFile(global.fileName, JSON.stringify(initialJson, null, '\t'))
       .then(() => {
         global.logger.info('API started and file created.');
