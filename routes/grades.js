@@ -26,6 +26,9 @@ router.post('/', async (req, res, next) => {
 
     await writeFile(global.fileName, JSON.stringify(data, null, '\t'));
 
+    global.logger.info(
+      `${req.method} ${req.baseUrl} - ${JSON.stringify(grade)}`
+    );
     res.send(grade);
   } catch (err) {
     next(err);
@@ -40,7 +43,6 @@ router.put('/', async (req, res, next) => {
     const index = data.grades.findIndex((current) => {
       return current.id === grade.id;
     });
-
     if (index === -1) {
       throw new Error(`Couldn't find the record with id: ${grade.id}.`);
     }
@@ -53,6 +55,51 @@ router.put('/', async (req, res, next) => {
 
     await writeFile(global.fileName, JSON.stringify(data, null, '\t'));
 
+    global.logger.info(
+      `${req.method} ${req.baseUrl} - ${JSON.stringify(data.grades[index])}`
+    );
+    res.send(data.grades[index]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id);
+    const data = JSON.parse(await readFile(global.fileName));
+
+    const index = data.grades.findIndex((current) => {
+      return current.id === id;
+    });
+    if (index === -1) {
+      throw new Error(`Couldn't find the record with id: ${id}.`);
+    }
+
+    data.grades.splice(index, 1);
+
+    await writeFile(global.fileName, JSON.stringify(data, null, '\t'));
+
+    global.logger.info(`${req.method} ${req.baseUrl} - ${id}`);
+    res.end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id);
+    const data = JSON.parse(await readFile(global.fileName));
+
+    const index = data.grades.findIndex((grade) => {
+      return grade.id === id;
+    });
+    if (index === -1) {
+      throw new Error(`Couldn't find the record with id: ${id}.`);
+    }
+
+    global.logger.info(`${req.method} ${req.baseUrl} - ${id}`);
     res.send(data.grades[index]);
   } catch (err) {
     next(err);
@@ -60,7 +107,7 @@ router.put('/', async (req, res, next) => {
 });
 
 router.use((err, req, res, next) => {
-  console.log(err.message);
+  global.logger.error(`${req.method} ${req.baseUrl} - ${err.message}`);
   res.status(400).send({ error: err.message });
 });
 
